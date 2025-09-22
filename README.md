@@ -20,11 +20,48 @@ Node.js (version 14 or higher)
 A modern web browser that supports Web Speech API (Chrome, Edge, Safari)
 Microphone access
 
-Installation
+### Docker Setup
 
-Clone the repository
-  git clone <your-repo-url>
-  cd hindi-voice-assistant
+Run the entire application (frontend, backend, and PostgreSQL database) using Docker.
+
+#### Development environment
+
+1. Copy the backend environment template and update any secrets:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+2. Start all services with live-reload support:
+   ```bash
+   docker compose -f docker-compose.dev.yml up --build
+   ```
+3. Visit the app at [http://localhost:3000](http://localhost:3000). The backend API will be exposed on port `3001` and PostgreSQL on `5432`.
+
+#### Production build
+
+1. Provide the required environment variables (for example by exporting them or by creating a `.env` file next to the compose file). At minimum set `SERVER_NAME` to the public domain that will terminate TLS and the backend secrets described in `backend/.env.example`. Example:
+   ```env
+   SERVER_NAME=voice.example.com
+   FRONTEND_URL=https://voice.example.com
+   DB_PASSWORD=super-secret
+   DB_NAME=personal_assistant
+   CERTBOT_RENEW_INTERVAL=12h # optional, defaults to 12 hours
+   ```
+2. Request an initial TLS certificate (only required once per domain). Replace the email and domain with your own values:
+   ```bash
+   docker compose -f docker-compose.prod.yml run --rm certbot \
+     certonly --webroot -w /var/www/certbot \
+     -d "$SERVER_NAME" --email you@example.com --agree-tos --no-eff-email
+   ```
+   The nginx container serves a self-signed certificate until a real one is issued.
+3. Build and start the containers:
+   ```bash
+   docker compose -f docker-compose.prod.yml up --build -d
+   ```
+4. Access the application at `https://$SERVER_NAME`. Port `80` remains open so Certbot can renew the certificate using the HTTP challenge.
+
+To stop the stack use `docker compose ... down` with the same compose file that was used to start it. The PostgreSQL data persists in the named Docker volume `postgres-data`, and TLS assets live in `certbot-certs`.
+
+### Manual setup
 
 Install dependencies
   npm install
