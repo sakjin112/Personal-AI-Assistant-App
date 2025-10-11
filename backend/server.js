@@ -166,6 +166,7 @@ async function startServer() {
   try {
     // Test database connection
     const { pool } = require('./database');
+    console.log('Testing database connection...', pool);
     await pool.query('SELECT 1');
     console.log('✅ Database connection verified');
     

@@ -14,6 +14,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WDS_SOCKET_PORT=0
       - PORT=3000
+      - REACT_APP_SUPABASE_URL=${SUPABASE_URL:-https://gegycwfuvdppjgwhovar.supabase.co}
+      - REACT_APP_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlZ3ljd2Z1dmRwcGpnd2hvdmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjcxMTIsImV4cCI6MjA3NTU0MzExMn0.HazDFT8MUZJph8j8sUxxiP2NYZvQaVaam1uH0y0Ieo0}
     ports:
       - "3000:3000"
     depends_on:
@@ -38,14 +40,15 @@ services:
       - DB_PASSWORD=postgres
       - DB_NAME=personal_assistant
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - SUPABASE_URL=${SUPABASE_URL:-}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+      - SUPABASE_URL=${SUPABASE_URL:-https://gegycwfuvdppjgwhovar.supabase.co}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlZ3ljd2Z1dmRwcGpnd2hvdmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjcxMTIsImV4cCI6MjA3NTU0MzExMn0.HazDFT8MUZJph8j8sUxxiP2NYZvQaVaam1uH0y0Ieo0}
       - JWT_SECRET=${JWT_SECRET:-change-me}
       - JWT_EXPIRE=${JWT_EXPIRE:-7d}
     ports:
       - "3001:3001"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:16-alpine
@@ -57,8 +60,29 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./backend/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d personal_assistant"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    depends_on:
+      - postgres
 
 volumes:
   frontend-node-modules:
   backend-node-modules:
   postgres-data:
+
+networks:
+  default:
+    name: hindi_speech_app_default
+    driver: bridge
+

@@ -1,7 +1,7 @@
 // frontend/src/hooks/useDataManagement.js - ALL-IN-ONE VERSION
 import { useState, useEffect, useCallback } from 'react';
 
-const useDataManagement = (messages) => {
+const useDataManagement = (messages, authToken) => {
   console.log('🔧 useDataManagement hook initialized');
   
   // ===== STATE MANAGEMENT =====
@@ -141,7 +141,11 @@ const useDataManagement = (messages) => {
       console.log('🌐 Fetching data from backend using /data endpoint...');
       
       // Use the correct endpoint that exists in your backend
-      const response = await fetch(`http://localhost:3001/data/${userId}`);
+      const response = await fetch(`http://localhost:3001/data/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -175,7 +179,7 @@ const useDataManagement = (messages) => {
     } finally {
       setIsLoading(false);
     }
-  }, [transformBackendData]);
+  }, [transformBackendData, authToken]);
 
   // ===== ACTION HANDLERS =====
   const handleAiActions = useCallback(async (actions, userId) => {

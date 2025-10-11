@@ -41,7 +41,7 @@ function App() {
     handleAiActions, // ✅ Now this exists!
     isLoading: isDataLoading,
     loadUserData
-  } = useDataManagement(messages);
+  } = useDataManagement(messages, authToken);
 
   const {
     isRecording: isListening,     
