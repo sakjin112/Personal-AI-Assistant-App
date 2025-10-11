@@ -171,6 +171,20 @@
     gap: 8px;
   }
   
+  /* ===== SUCCESS MESSAGE ===== */
+  .success-message {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: var(--auth-success);
+    padding: 12px 16px;
+    border-radius: var(--auth-radius);
+    margin-bottom: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
   /* ===== SUBMIT BUTTON ===== */
   .auth-submit-btn {
     width: 100%;
