@@ -4,9 +4,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      target: development
-      args:
-        NODE_VERSION: 20
+      dockerfile: Dockerfile.dev
     volumes:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules
