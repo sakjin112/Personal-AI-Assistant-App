@@ -1,12 +1,12 @@
 import { useState } from 'react';
+import appService from '../services/AppService';
 
-const useAIIntegration = (accumulatedText, userResponse, currentMode, language) => {
+const useAIIntegration = (accumulatedText, userResponse, currentMode, language, authToken) => {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState(null);
 
-  // Backend API base URL
-  const API_BASE = 'http://localhost:3001';
+  // Initialize AppService for API calls
   const userId = 'default'; // In a real app, this would come from authentication
 
   // Text-to-speech function
@@ -77,11 +77,12 @@ const useAIIntegration = (accumulatedText, userResponse, currentMode, language) 
       };
 
       // Send to your backend AI endpoint
-      const response = await fetch(`${API_BASE}/chat`, {
+      const response = await fetch(appService.chat, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         }, 
         body: JSON.stringify(requestData)
       });
@@ -125,7 +126,7 @@ const useAIIntegration = (accumulatedText, userResponse, currentMode, language) 
       // Create error message
       const errorMessage = {
         type: "ai",
-        text: `Sorry, I'm having trouble connecting right now. Please check if the backend server is running on ${API_BASE}. Error: ${error.message}`,
+        text: `Sorry, I'm having trouble connecting right now. Please check if the backend server is running on ${appService.chat}. Error: ${error.message}`,
         timestamp: new Date(),
         mode: currentMode,
         isError: true

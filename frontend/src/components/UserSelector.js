@@ -1,7 +1,7 @@
-
 // frontend/src/components/UserSelector.js - Updated for Family Authentication
 
 import React, { useState, useEffect } from 'react';
+import appService from '../services/AppService';
 import './UserSelector.css';
 
 const UserSelector = ({ onUserSelect, currentUser, familyAccount, authToken }) => {
@@ -48,7 +48,7 @@ const UserSelector = ({ onUserSelect, currentUser, familyAccount, authToken }) =
       console.log('🔍 Loading profiles for family account...');
       
       // Get profiles using the authenticated endpoint
-      const response = await fetch('http://localhost:3001/auth/profiles', {
+      const response = await fetch(appService.auth.profiles, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -81,7 +81,7 @@ const UserSelector = ({ onUserSelect, currentUser, familyAccount, authToken }) =
       console.log(`👤 Profile selected: ${profile.user_id}`);
       
       // Get full profile data using the authenticated endpoint
-      const response = await fetch(`http://localhost:3001/user-profile/${profile.user_id}`, {
+      const response = await fetch(appService.user.profile(profile.user_id), {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -132,7 +132,7 @@ const UserSelector = ({ onUserSelect, currentUser, familyAccount, authToken }) =
       setError('');
       
       // Create profile using authenticated endpoint
-      const response = await fetch('http://localhost:3001/auth/profiles', {
+      const response = await fetch(appService.auth.profiles, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
