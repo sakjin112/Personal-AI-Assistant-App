@@ -37,9 +37,7 @@ ENV PORT=80
 RUN apk add --no-cache gettext
 
 # Create a script to handle environment variables
-RUN echo '#!/bin/sh\n\
-envsubst \''$BACKEND_URL $PORT\'' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf\n\
-# Start Nginx\nexec nginx -g "daemon off;"' > /docker-entrypoint.d/20-envsubst.sh \
+RUN echo '#!/bin/sh\nset -e\n\n# Substitute environment variables in nginx config\nenvsubst \'${BACKEND_URL} ${PORT}\' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf\n\n# Start Nginx\nexec nginx -g "daemon off;"' > /docker-entrypoint.d/20-envsubst.sh \
     && chmod +x /docker-entrypoint.d/20-envsubst.sh
 
 # Copy configuration files
