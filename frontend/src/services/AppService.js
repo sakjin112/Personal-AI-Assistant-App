@@ -1,7 +1,8 @@
 
 class AppService {
     constructor() {
-      this.baseUrl = 'http://localhost:3001';
+      this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      console.log('API Base URL:', this.baseUrl);
     }
   
     async sendMessageToAI(message, mode, context, language, userId = 'default') {
