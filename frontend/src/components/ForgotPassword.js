@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './AuthScreen.css';
+import appService from '../services/AppService';
 
 const ForgotPassword = ({ onBack }) => {
   const [email, setEmail] = useState('');
@@ -17,7 +18,7 @@ const ForgotPassword = ({ onBack }) => {
       console.log('🔑 Requesting password reset for:', email);
 
       // Request password reset via backend
-      const response = await fetch('http://localhost:3001/auth/forgot-password', {
+      const response = await fetch(appService.auth.forgotPassword, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

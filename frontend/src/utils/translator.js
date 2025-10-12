@@ -1,14 +1,5 @@
-const translateText = async (text, targetLanguage) => {
-    // Simple language mapping
-    const languageMap = {
-      'hi-IN': 'Hindi',
-      'en-US': 'English', 
-      'es-ES': 'Spanish',
-      'fr-FR': 'French',
-      'de-DE': 'German'
-    };
-  
-    const targetLang = languageMap[targetLanguage] || 'English';
+import appService from '../services/AppService';
+const translateText = async (text, targetLanguage, authToken) => {
     
     // If it's already English or Hindi, don't translate
     if (targetLanguage === 'en-US' || targetLanguage === 'hi-IN') {
@@ -16,12 +7,12 @@ const translateText = async (text, targetLanguage) => {
     }
   
     try {
-      const response = await fetch('http://localhost:3001/translate', {
+      const response = await fetch(appService.data.translate, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
         body: JSON.stringify({
-          text: text,
-          targetLanguage: targetLang
+          text,
+          targetLang: 'hi' // Always translate to Hindi for this app
         })
       });
   

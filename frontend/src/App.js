@@ -10,6 +10,7 @@ import ContentDisplay from './components/ContentDisplay';
 import useDataManagement from './hooks/useDataManagement';
 import useSpeechRecognition from './hooks/useSpeechRecognition';
 import { supabase } from './services/supabaseClient';
+import appService from './services/AppService';
 
 function App() {
   // =====================================
@@ -75,7 +76,7 @@ function App() {
       const token = session.access_token;
 
       // Verify token with backend
-      const response = await fetch('http://localhost:3001/auth/account', {
+      const response = await fetch(appService.auth.account, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -336,7 +337,7 @@ function App() {
       };
   
       // 🔑 KEY FIX: Include Authorization header with JWT token
-      const response = await fetch('http://localhost:3001/chat', {
+      const response = await fetch(appService.chat, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -421,10 +422,11 @@ function App() {
       console.log('🗑️ Manual list deletion (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -451,10 +453,11 @@ function App() {
       console.log('📝 Manual list item update (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -481,10 +484,11 @@ function App() {
       console.log('🗑️ Manual list item deletion (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -511,10 +515,11 @@ function App() {
       console.log('📝 Manual event edit (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -541,10 +546,11 @@ function App() {
       console.log('🗑️ Manual event deletion (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -571,10 +577,11 @@ function App() {
       console.log('🗑️ Manual schedule deletion (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -601,10 +608,11 @@ function App() {
       console.log('📝 Manual memory item update (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -631,10 +639,11 @@ function App() {
       console.log('🗑️ Manual memory item deletion (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -661,10 +670,11 @@ function App() {
       console.log('🗑️ Manual memory deletion (smart action):', smartAction);
       
       // Send directly to backend using the enhanced endpoint
-      const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+      const response = await fetch(appService.data.saveEnhanced, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           userId: currentUser.user_id,
@@ -682,22 +692,6 @@ function App() {
       }
     } catch (error) {
       console.error('❌ Error deleting memory:', error);
-    }
-  };
-
-  // Helper function to notify backend of manual UI actions
-  const notifyBackendOfAction = async (action) => {
-    try {
-      await fetch('http://localhost:3001/save-data-enhanced', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUser.user_id,
-          actions: [action]
-        })
-      });
-    } catch (error) {
-      console.error('❌ Error notifying backend:', error);
     }
   };
 
