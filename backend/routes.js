@@ -328,7 +328,7 @@ initializeSmartProcessor();
  */
 router.post('/auth/create-account',
   authRateLimit,
-  validateAuthRequest(['accountName', 'password']),
+  validateAuthRequest(['accountName']),
   async (req, res) => {
     try {
       const authHeader = req.headers['authorization'];
@@ -336,41 +336,34 @@ router.post('/auth/create-account',
 
       if (!token) {
         return res.status(401).json({
-          error: 'Authentication required',
-          message: 'Please login first'
+          error: 'Unauthorized',
+          message: 'Authentication token required'
         });
       }
 
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      if (error || !user) {
-        return res.status(403).json({
-          error: 'Invalid token',
-          message: 'Token is invalid or expired'
+      // Verify the Supabase token
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Invalid authentication token'
         });
       }
 
-      const { accountName, password } = req.body;
+      const { accountName } = req.body;
 
-      const passwordValidation = validatePassword(password);
-      if (!passwordValidation.isValid) {
-        return res.status(400).json({
-          error: 'Weak password',
-          message: 'Password does not meet security requirements',
-          requirements: passwordValidation.errors
+      // Check if account already exists
+      const existingAccount = await getFamilyAccountWithProfiles(user.email);
+      if (existingAccount) {
+        return res.status(409).json({
+          error: 'Account exists',
+          message: 'An account with this email already exists'
         });
       }
 
-      const accountNameValidation = validateAccountName(accountName);
-      if (!accountNameValidation.isValid) {
-        return res.status(400).json({
-          error: 'Invalid account name',
-          message: 'Account name does not meet requirements',
-          requirements: accountNameValidation.errors
-        });
-      }
-
-      // Create the family account in our database
-      const account = await createFamilyAccount(user.email, password, accountName);
+      // Create the family account in our database (password handled by Supabase)
+      const account = await createFamilyAccount(user.email, accountName);
 
       res.status(201).json({
         account: {
@@ -395,6 +388,211 @@ router.post('/auth/create-account',
  * POST /auth/login - Authenticate family account
  * This is where families log into their account
  */
+router.post('/auth/login',
+  authRateLimit,
+  validateAuthRequest(['email', 'password']),
+  async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      console.log(`🔐 Login attempt for: ${email}`);
+
+      // Authenticate with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        console.error('❌ Supabase login failed:', error.message);
+        return res.status(401).json({
+          error: 'Login failed',
+          message: 'Invalid email or password'
+        });
+      }
+
+      if (!data.session) {
+        return res.status(401).json({
+          error: 'Login failed',
+          message: 'No session created'
+        });
+      }
+
+      const token = data.session.access_token;
+
+      // Get account info from database
+      const accountWithProfiles = await getFamilyAccountWithProfiles(email);
+      
+      if (!accountWithProfiles) {
+        return res.status(404).json({
+          error: 'Account not found',
+          message: 'No account exists for this email. Please sign up first.'
+        });
+      }
+
+      console.log(`✅ Login successful: ${accountWithProfiles.accountName}`);
+
+      res.json({
+        message: 'Login successful',
+        token,
+        account: {
+          email: accountWithProfiles.email,
+          accountName: accountWithProfiles.accountName,
+          maxProfiles: accountWithProfiles.maxProfiles,
+          profileCount: accountWithProfiles.profileCount,
+          profiles: accountWithProfiles.profiles
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      res.status(500).json({
+        error: 'Login failed',
+        message: 'An error occurred during login'
+      });
+    }
+  }
+);
+
+/**
+ * POST /auth/logout - Logout from family account
+ */
+router.post('/auth/logout',
+  authenticateAccount,
+  async (req, res) => {
+    try {
+      console.log(`🚪 Logout request for: ${req.account.email}`);
+
+      // Get token from header
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+
+      if (token) {
+        // Sign out from Supabase
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error('❌ Supabase logout error:', error);
+        }
+      }
+
+      console.log(`✅ Logout successful: ${req.account.email}`);
+
+      res.json({
+        message: 'Logout successful'
+      });
+
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      res.status(500).json({
+        error: 'Logout failed',
+        message: 'An error occurred during logout'
+      });
+    }
+  }
+);
+
+/**
+ * POST /auth/forgot-password - Request password reset
+ */
+router.post('/auth/forgot-password',
+  authRateLimit,
+  validateAuthRequest(['email']),
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      console.log(`🔑 Password reset request for: ${email}`);
+
+      // Send password reset email via Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password`
+      });
+
+      if (error) {
+        console.error('❌ Password reset error:', error);
+        // Don't reveal if email exists or not for security
+        return res.json({
+          message: 'If an account exists with this email, a password reset link has been sent.'
+        });
+      }
+
+      console.log(`✅ Password reset email sent to: ${email}`);
+
+      res.json({
+        message: 'If an account exists with this email, a password reset link has been sent.'
+      });
+
+    } catch (error) {
+      console.error('❌ Password reset error:', error);
+      res.status(500).json({
+        error: 'Password reset failed',
+        message: 'An error occurred while processing your request'
+      });
+    }
+  }
+);
+
+/**
+ * POST /auth/reset-password - Reset password with token
+ */
+router.post('/auth/reset-password',
+  authRateLimit,
+  validateAuthRequest(['password']),
+  async (req, res) => {
+    try {
+      const { password } = req.body;
+      
+      // Get token from Authorization header
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+
+      if (!token) {
+        return res.status(401).json({
+          error: 'Token required',
+          message: 'Password reset token is required'
+        });
+      }
+
+      console.log(`🔑 Password reset attempt with token`);
+
+      // Validate password strength
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          error: 'Weak password',
+          message: 'Password does not meet security requirements',
+          requirements: passwordValidation.errors
+        });
+      }
+
+      // Update password in Supabase
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) {
+        console.error('❌ Password update error:', error);
+        return res.status(400).json({
+          error: 'Password reset failed',
+          message: error.message
+        });
+      }
+
+      console.log(`✅ Password reset successful`);
+
+      res.json({
+        message: 'Password has been reset successfully'
+      });
+
+    } catch (error) {
+      console.error('❌ Password reset error:', error);
+      res.status(500).json({
+        error: 'Password reset failed',
+        message: 'An error occurred while resetting your password'
+      });
+    }
+  }
+);
 
 /**
  * GET /auth/account - Get current account info with profiles
@@ -960,14 +1158,15 @@ router.get('/user-profile/:userId', authenticateAccount, authorizeProfileAccess,
     const { userId } = req.params;
     
     // Users can only access their own profile (or admins can access any - you can implement admin logic later)
-    if (req.user.userId !== userId) {
+    const profileBelongsToAccount = req.account.profiles.some(profile => profile.user_id === userId);
+    if (!profileBelongsToAccount) {
       return res.status(403).json({ 
         error: 'Access denied',
         message: 'You can only access your own profile'
       });
     }
     
-    console.log(`👤 Getting user profile: ${userId} (requested by: ${req.user.userId})`);
+    console.log(`👤 Getting user profile: ${userId} (requested by account: ${req.account.email})`);
     
     const userProfile = await getUserProfile(userId);
     

@@ -8,11 +8,8 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432,
   });
 
-const { 
-    hashPassword, 
-    comparePassword, 
-    generateProfileId, 
-    hashToken 
+const {
+    generateProfileId
   } = require('./utils/familyAuth');
   
 
@@ -21,26 +18,22 @@ const {
 // =============================================
 
 /**
- * Create a new family account with authentication
+ * Create a new family account (Supabase handles authentication)
  * This is like creating a "family login" that can have multiple profiles
- * @param {string} email - Account email (login credential)
- * @param {string} password - Account password
+ * @param {string} email - Account email (from Supabase)
  * @param {string} accountName - Family/household name (e.g., "Smith Family")
  * @returns {object} - Created account info
  */
-async function createFamilyAccount(email, password, accountName) {
+async function createFamilyAccount(email, accountName) {
   try {
     console.log(`👨‍👩‍👧‍👦 Creating family account: ${accountName} (${email})`);
     
-    // Hash the password for secure storage
-    const passwordHash = await hashPassword(password);
-    
-    // Create the account
+    // Create the account (password is handled by Supabase)
     const result = await pool.query(`
-      INSERT INTO accounts (email, password_hash, account_name, created_at)
-      VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+      INSERT INTO accounts (email, account_name, created_at)
+      VALUES ($1, $2, CURRENT_TIMESTAMP)
       RETURNING id, email, account_name, created_at, max_profiles
-    `, [email, passwordHash, accountName]);
+    `, [email, accountName]);
     
     const account = result.rows[0];
     console.log(`✅ Family account created successfully: ${accountName} (ID: ${account.id})`);
@@ -60,60 +53,12 @@ async function createFamilyAccount(email, password, accountName) {
 }
 
 /**
- * Authenticate a family account (login)
- * This is what happens when someone enters email/password
- * @param {string} email - Account email
- * @param {string} password - Account password
- * @returns {object|null} - Account info if successful, null if failed
+ * DEPRECATED: Authentication is now handled by Supabase
+ * This function is kept for backward compatibility but should not be used
  */
 async function authenticateFamilyAccount(email, password) {
-  try {
-    console.log(`🔐 Authenticating family account: ${email}`);
-    
-    // Get account with password hash
-    const result = await pool.query(`
-      SELECT id, email, password_hash, account_name, is_verified, last_login
-      FROM accounts 
-      WHERE email = $1
-    `, [email]);
-    
-    if (result.rows.length === 0) {
-      console.log(`❌ Account not found: ${email}`);
-      return null;
-    }
-    
-    const account = result.rows[0];
-    
-    // Verify password
-    const isValidPassword = await comparePassword(password, account.password_hash);
-    
-    if (!isValidPassword) {
-      console.log(`❌ Invalid password for account: ${email}`);
-      return null;
-    }
-    
-    // Update last login timestamp
-    await pool.query(`
-      UPDATE accounts 
-      SET last_login = CURRENT_TIMESTAMP 
-      WHERE email = $1
-    `, [email]);
-    
-    console.log(`✅ Family account authenticated successfully: ${account.account_name}`);
-    
-    // Return account info (without password hash)
-    return {
-      id: account.id,
-      email: account.email,
-      accountName: account.account_name,
-      isVerified: account.is_verified,
-      lastLogin: account.last_login
-    };
-    
-  } catch (error) {
-    console.error('❌ Error authenticating family account:', error);
-    throw error;
-  }
+  console.warn('⚠️ authenticateFamilyAccount is deprecated - use Supabase auth instead');
+  throw new Error('Authentication is handled by Supabase. Use Supabase auth endpoints.');
 }
 
 /**
@@ -227,104 +172,22 @@ async function createProfileInAccount(accountEmail, displayName, profileData = {
 }
 
 /**
- * Create a session for an authenticated account
- * This stores the JWT token securely in the database
- * @param {string} accountEmail - Account email
- * @param {string} token - JWT token
- * @param {object} sessionData - Additional session data
- * @returns {object} - Created session
+ * DEPRECATED: Session management is now handled by Supabase
+ * These functions are kept for backward compatibility but should not be used
  */
 async function createAccountSession(accountEmail, token, sessionData = {}) {
-  try {
-    console.log(`🎫 Creating session for account: ${accountEmail}`);
-    
-    const { userAgent, ipAddress } = sessionData;
-    const tokenHash = hashToken(token);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    
-    const result = await pool.query(`
-      INSERT INTO account_sessions (account_email, token_hash, expires_at, user_agent, ip_address)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
-    `, [accountEmail, tokenHash, expiresAt, userAgent, ipAddress]);
-    
-    console.log(`✅ Session created for account: ${accountEmail}`);
-    return result.rows[0];
-    
-  } catch (error) {
-    console.error('❌ Error creating account session:', error);
-    throw error;
-  }
+  console.warn('⚠️ createAccountSession is deprecated - Supabase handles sessions');
+  throw new Error('Session management is handled by Supabase');
 }
 
-/**
- * Verify an account session (check if token is valid)
- * This happens on every protected request
- * @param {string} token - JWT token
- * @returns {object|null} - Session info if valid, null if invalid
- */
 async function verifyAccountSession(token) {
-  try {
-    const tokenHash = hashToken(token);
-    
-    const result = await pool.query(`
-      SELECT 
-        s.*,
-        a.account_name,
-        a.is_verified,
-        a.max_profiles
-      FROM account_sessions s
-      JOIN accounts a ON s.account_email = a.email
-      WHERE s.token_hash = $1 
-        AND s.expires_at > CURRENT_TIMESTAMP 
-        AND s.is_active = true
-    `, [tokenHash]);
-    
-    if (result.rows.length === 0) {
-      console.log('❌ Session not found or expired');
-      return null;
-    }
-    
-    const session = result.rows[0];
-    
-    // Update last used timestamp
-    await pool.query(`
-      UPDATE account_sessions 
-      SET last_used = CURRENT_TIMESTAMP 
-      WHERE id = $1
-    `, [session.id]);
-    
-    console.log(`✅ Session verified for account: ${session.account_email}`);
-    return session;
-    
-  } catch (error) {
-    console.error('❌ Error verifying account session:', error);
-    return null;
-  }
+  console.warn('⚠️ verifyAccountSession is deprecated - Supabase handles sessions');
+  throw new Error('Session management is handled by Supabase');
 }
 
-/**
- * Delete an account session (logout)
- * @param {string} accountEmail - Account email
- * @param {string} token - JWT token
- * @returns {boolean} - True if session was deleted
- */
 async function deleteAccountSession(accountEmail, token) {
-  try {
-    const tokenHash = hashToken(token);
-    
-    const result = await pool.query(`
-      DELETE FROM account_sessions 
-      WHERE account_email = $1 AND token_hash = $2
-    `, [accountEmail, tokenHash]);
-    
-    console.log(`🚪 Session deleted for account: ${accountEmail}`);
-    return result.rowCount > 0;
-    
-  } catch (error) {
-    console.error('❌ Error deleting account session:', error);
-    return false;
-  }
+  console.warn('⚠️ deleteAccountSession is deprecated - Supabase handles sessions');
+  throw new Error('Session management is handled by Supabase');
 }
 
 /**

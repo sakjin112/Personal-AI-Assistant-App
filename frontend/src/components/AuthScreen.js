@@ -2,12 +2,14 @@
 import React, { useState } from 'react';
 import './AuthScreen.css';
 import { supabase } from '../services/supabaseClient';
+import ForgotPassword from './ForgotPassword';
 
 const AuthScreen = ({ onAuthSuccess }) => {
   // =====================================
   // STATE MANAGEMENT
   // =====================================
   const [isLogin, setIsLogin] = useState(true); // true = login, false = signup
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -141,6 +143,11 @@ const AuthScreen = ({ onAuthSuccess }) => {
   // RENDER
   // =====================================
   
+  // Show forgot password screen if requested
+  if (showForgotPassword) {
+    return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
+  }
+  
   return (
     <div className="auth-screen">
       <div className="auth-container">
@@ -258,6 +265,15 @@ const AuthScreen = ({ onAuthSuccess }) => {
               )}
             </button>
           </form>
+
+          {/* Forgot Password Link (only show on login) */}
+          {isLogin && (
+            <div className="auth-toggle-link" style={{ marginTop: '10px' }}>
+              <button onClick={() => setShowForgotPassword(true)} className="link-btn">
+                Forgot your password?
+              </button>
+            </div>
+          )}
 
           {/* Toggle Link */}
           <div className="auth-toggle-link">
