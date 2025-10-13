@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import './AuthScreen.css';
 import { supabase } from '../services/supabaseClient';
+import appService from '../services/AppService';
 import ForgotPassword from './ForgotPassword';
 
 const AuthScreen = ({ onAuthSuccess }) => {
@@ -55,7 +55,7 @@ const AuthScreen = ({ onAuthSuccess }) => {
           const token = data.session.access_token;
 
           // Get account info from backend
-          const response = await fetch('http://localhost:3001/auth/account', {
+          const response = await fetch(appService.auth.account, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -82,13 +82,14 @@ const AuthScreen = ({ onAuthSuccess }) => {
           const token = data.session.access_token;
 
           // Create family account in backend
-          const response = await fetch('http://localhost:3001/auth/create-account', {
+          const response = await fetch(appService.auth.createAccount, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
+              email: formData.email,
               accountName: formData.accountName,
               password: formData.password
             })

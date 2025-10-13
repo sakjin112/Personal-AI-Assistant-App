@@ -1,5 +1,6 @@
 // frontend/src/hooks/useDataManagement.js - ALL-IN-ONE VERSION
 import { useState, useEffect, useCallback } from 'react';
+import appService from '../services/AppService';
 
 const useDataManagement = (messages, authToken) => {
   console.log('🔧 useDataManagement hook initialized');
@@ -141,7 +142,7 @@ const useDataManagement = (messages, authToken) => {
       console.log('🌐 Fetching data from backend using /data endpoint...');
       
       // Use the correct endpoint that exists in your backend
-      const response = await fetch(`http://localhost:3001/data/${userId}`, {
+      const response = await fetch(appService.user.data(userId), {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -195,10 +196,11 @@ const useDataManagement = (messages, authToken) => {
       
       try {
         // Use the /save-data-enhanced endpoint that exists in your backend
-        const response = await fetch(`http://localhost:3001/save-data-enhanced`, {
+        const response = await fetch(appService.data.saveEnhanced, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
           },
           body: JSON.stringify({
             userId,
