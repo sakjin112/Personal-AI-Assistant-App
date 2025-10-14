@@ -414,7 +414,7 @@ SOFTWARE.
 **Sakhi Jindal**
 - Resume: [View PDF](https://drive.google.com/file/d/1VnoQGZVVzR6Ff62xQKMPtF9kxw68RP6R/view?usp=sharing)
 - Email: sakhi.jindal@gmail.com
-- GitHub: [@sakhijindal](https://github.com/sakhijindal)
+- GitHub: [@sakjin112](https://github.com/sakjin112)
 
 ## 🙏 Acknowledgments
 
