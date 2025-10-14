@@ -30,21 +30,12 @@ services:
         NODE_VERSION: 20
     volumes:
       - ./backend:/app
-      - backend-node-modules:/app/node_modules
+    env_file:
+      - ./backend/.env
     environment:
       - NODE_ENV=development
       - PORT=3001
       - FRONTEND_URL=http://localhost:3000
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=personal_assistant
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - SUPABASE_URL=${SUPABASE_URL:-https://gegycwfuvdppjgwhovar.supabase.co}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlZ3ljd2Z1dmRwcGpnd2hvdmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjcxMTIsImV4cCI6MjA3NTU0MzExMn0.HazDFT8MUZJph8j8sUxxiP2NYZvQaVaam1uH0y0Ieo0}
-      - JWT_SECRET=${JWT_SECRET:-change-me}
-      - JWT_EXPIRE=${JWT_EXPIRE:-7d}
     ports:
       - "3001:3001"
     depends_on:
