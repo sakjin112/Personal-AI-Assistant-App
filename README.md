@@ -412,9 +412,9 @@ SOFTWARE.
 ## 👤 Author
 
 **Sakhi Jindal**
-- Resume: [View PDF](https://drive.google.com/file/d/1VnoQGZVVzR6Ff62xQKMPtF9kxw68RP6R/view?usp=sharing)
+- Resume: [View Resume](https://www.canva.com/design/DAG04MyLRnA/z0I1v3gwHZ8YuT7RDww6HQ/edit?utm_content=DAG04MyLRnA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 - Email: sakhi.jindal@gmail.com
-- GitHub: [@sakjin112](https://github.com/sakjin112)
+- GitHub: [@sakhijindal](https://github.com/sakhijindal)
 
 ## 🙏 Acknowledgments
 
