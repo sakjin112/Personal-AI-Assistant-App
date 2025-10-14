@@ -150,12 +150,32 @@ class EnhancedSmartActionProcessor {
     /**
      * Handle smart addition with AI matching
      */
-    async handleSmartAdd(data, userId) {
-      const { target, operation, values, metadata } = data;
+  async handleSmartAdd(data, userId) {
+      const { target, operation, values, metadata = {} } = data;
+      const normalizedOperation = (operation || '').toLowerCase();
+      const normalizedTarget = (target || '').toLowerCase();
+      const currentMode = metadata.mode;
+
+      // If the AI tried to add to a list while we're in memory mode, treat it as memory storage instead
+      if (
+        normalizedOperation === 'add_to_list' &&
+        (currentMode === 'memory' || normalizedTarget.includes('memory'))
+      ) {
+        console.log('🧠 Detected memory-mode list operation – rerouting to memory storage');
+        return await this.handleSmartRemember({
+          target,
+          operation: 'store_memory',
+          values,
+          metadata: {
+            ...metadata,
+            reroutedFrom: 'add_to_list_memory_mode'
+          }
+        }, userId);
+      }
       
       console.log(`➕ Smart adding to: "${target}"`);
       
-      switch(operation) {
+      switch(normalizedOperation) {
         case 'add_to_list':
           const allLists = await this.db.getUserLists(userId);
           const targetList = await this.aiMatcher.findBestListMatch(target, allLists);
@@ -186,6 +206,7 @@ class EnhancedSmartActionProcessor {
             }
           };
           
+        case 'add_to_schedule':  // Handle add_to_schedule the same as add_event
         case 'add_event':
           const allSchedules = await this.db.getUserSchedules(userId);
           const targetSchedule = await this.aiMatcher.findBestScheduleMatch(target, allSchedules);
@@ -201,8 +222,10 @@ class EnhancedSmartActionProcessor {
           
           // Add event to matched schedule
           for (const event of values) {
+            console.log('Adding event:', event);
             const eventDetails = this.parseEventDetails(event, metadata);
-            await this.db.addEventToSchedule(userId, targetSchedule, eventDetails);
+            console.log('Event details:', eventDetails);
+            await this.db.addEventToSchedule(userId, targetSchedule, eventDetails.title, eventDetails.startTime, eventDetails);
           }
           
           return {
@@ -216,6 +239,7 @@ class EnhancedSmartActionProcessor {
             }
           };
           
+        case 'add_to_memory':
         case 'store_memory':
           const allMemory = await this.db.getUserMemories(userId);
           const targetCategory = await this.aiMatcher.findBestMemoryMatch(target, allMemory);
@@ -771,9 +795,13 @@ async handleSmartDelete(data, userId) {
      * Parse event details with smart date parsing
      */
     parseEventDetails(eventString, metadata) {
+      const now = new Date();
+      const defaultStartTime = new Date(now);
+      defaultStartTime.setHours(now.getHours() + 1, 0, 0, 0); // Default to next hour
+
       const details = {
         title: eventString,
-        startTime: null,
+        startTime: defaultStartTime.toISOString(), // Set default start time
         endTime: null,
         description: '',
         location: ''

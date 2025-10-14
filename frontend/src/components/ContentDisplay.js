@@ -867,6 +867,7 @@ const ContentDisplay = ({
   switch (currentMode) {
     case 'lists':
       return renderListsContent();
+    case 'schedules':
     case 'schedule':
       return renderSchedulesContent();
     case 'memory':
