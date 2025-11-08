@@ -412,8 +412,7 @@ SOFTWARE.
 ## 👤 Author
 
 **Sakhi Jindal**
-- Resume: [View Resume](https://www.canva.com/design/DAG04MyLRnA/z0I1v3gwHZ8YuT7RDww6HQ/edit?utm_content=DAG04MyLRnA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
-- Email: sakhi.jindal@gmail.com
+- Resume: [View Resume]()
 - GitHub: [@sakhijindal](https://github.com/sakhijindal)
 
 ## 🙏 Acknowledgments
@@ -423,10 +422,6 @@ SOFTWARE.
 - React team for the excellent framework
 - The open-source community for various libraries and tools
 
-## 📞 Contact
-
-For questions or inquiries about this project, please contact:
-- **Email**: sakhi.jindal@gmail.com
 
 ---
 
