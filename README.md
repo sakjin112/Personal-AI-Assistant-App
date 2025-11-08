@@ -13,8 +13,7 @@ A multilingual AI-powered personal assistant application that helps users manage
 The Personal Assistant App is a full-stack web application that combines the power of artificial intelligence with intuitive user interface design to create a seamless productivity experience. Users can interact with the assistant in multiple languages, manage multiple data types, and receive intelligent responses to natural language queries.
 
 ## 🚀 Live Project
-**Visit:** [Personal AI Assitant](https://personal-ai-assistant-l3d6.onrender.com/)
-
+**Visit:** [Personal AI Assistant](personal-ai-assistant-l3d6.onrender.com/)
 
 ## ✨ Key Features
 
