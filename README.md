@@ -415,7 +415,7 @@ SOFTWARE.
 ## 👤 Author
 
 **Sakhi Jindal**
-- Resume: [View Resume]()
+- Resume: [View Resume](https://drive.google.com/file/d/1QzpWVp-5xt6N5awsiHIAKkgF2S-0C1BV/view?usp=sharing)
 - GitHub: [@sakhijindal](https://github.com/sakhijindal)
 
 ## 🙏 Acknowledgments
